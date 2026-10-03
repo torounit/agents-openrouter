@@ -1,4 +1,4 @@
-import { createWorkersAI } from "workers-ai-provider";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { callable, routeAgentRequest, type Schedule } from "agents";
 import { getSchedulePrompt, scheduleSchema } from "agents/schedule";
 import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
@@ -48,12 +48,23 @@ export class ChatAgent extends AIChatAgent<Env> {
 
   async onChatMessage(_onFinish: unknown, options?: OnChatMessageOptions) {
     const mcpTools = this.mcp.getAITools();
-    const workersai = createWorkersAI({ binding: this.env.AI });
+    // Route OpenRouter requests through Cloudflare AI Gateway
+    // https://developers.cloudflare.com/ai-gateway/usage/providers/openrouter/
+    const gatewayUrl = await this.env.AI.gateway("openrouter").getUrl(
+      "openrouter"
+    );
+    const openrouter = createOpenRouter({
+      // The OpenRouter API key is stored in the gateway (BYOK), so send none
+      // https://developers.cloudflare.com/ai-gateway/configuration/bring-your-own-keys/
+      apiKey: "",
+      baseURL: `${gatewayUrl.replace(/\/$/, "")}/v1`,
+      // Required when the gateway has Authenticated Gateway enabled
+      // https://developers.cloudflare.com/ai-gateway/configuration/authentication/
+      headers: { "cf-aig-authorization": `Bearer ${this.env.CF_AIG_TOKEN}` }
+    });
 
     const result = streamText({
-      model: workersai("@cf/moonshotai/kimi-k2.7-code", {
-        sessionAffinity: this.sessionAffinity
-      }),
+      model: openrouter("qwen/qwen3.8-27b:free"),
       system: `You are a helpful assistant that can understand images. You can check the weather, get the user's timezone, run calculations, and schedule tasks. When users share images, describe what you see and answer questions about them.
 
 ${getSchedulePrompt({ date: new Date() })}
