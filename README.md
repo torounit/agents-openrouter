@@ -6,7 +6,7 @@
 
 A starter template for building AI chat agents on Cloudflare, powered by the [Agents SDK](https://developers.cloudflare.com/agents/).
 
-Uses Workers AI (no API key required), with tools for weather, timezone detection, calculations with approval, task scheduling, and vision (image input).
+Uses [OpenRouter](https://openrouter.ai/) through [Cloudflare AI Gateway](https://developers.cloudflare.com/ai-gateway/usage/providers/openrouter/), with tools for weather, timezone detection, calculations with approval, task scheduling, and vision (image input).
 
 ## Quick start
 
@@ -17,13 +17,19 @@ npm install
 npm run dev
 ```
 
-> **Cloudflare authentication is required to run locally.** This template uses
-> Workers AI with `"ai": { "remote": true }` in `wrangler.jsonc`, and Workers AI
-> has no local simulator — so `npm run dev` opens a remote proxy session against
-> Cloudflare and needs you to be authenticated. Either run `wrangler login` once
-> in an interactive terminal, or set a `CLOUDFLARE_API_TOKEN` environment
-> variable (e.g. in a `.env` file). No third-party (OpenAI/Anthropic) key is
-> needed, but a Cloudflare login is.
+> **Cloudflare authentication is required to run locally.** The AI binding uses
+> `"ai": { "remote": true }` in `wrangler.jsonc` to resolve the AI Gateway URL,
+> so `npm run dev` opens a remote proxy session against Cloudflare and needs you
+> to be authenticated. Either run `wrangler login` once in an interactive
+> terminal, or set a `CLOUDFLARE_API_TOKEN` environment variable.
+
+### AI Gateway setup
+
+1. Create an AI Gateway named `openrouter` with Authenticated Gateway enabled.
+2. Store your OpenRouter API key in the gateway (BYOK), or set `OPENROUTER_API_KEY`.
+3. Copy `.env.example` to `.env` and set `CF_AIG_TOKEN` to a Cloudflare API token
+   with AI Gateway Run permission. For production, run
+   `npx wrangler secret put CF_AIG_TOKEN`.
 
 Open [http://localhost:5173](http://localhost:5173) to see your agent in action.
 
@@ -47,7 +53,7 @@ src/
 
 ## What's included
 
-- **AI Chat** — Streaming responses powered by Workers AI via `AIChatAgent`
+- **AI Chat** — Streaming responses powered by OpenRouter (via AI Gateway) with `AIChatAgent`
 - **Image input** — Drag-and-drop, paste, or click to attach images for vision-capable models
 - **Three tool patterns** — server-side auto-execute, client-side (browser), and human-in-the-loop approval
 - **Scheduling** — one-time, delayed, and recurring (cron) tasks
@@ -179,7 +185,7 @@ See [MCP Client API](https://developers.cloudflare.com/agents/api-reference/mcp-
 
 ## Use a different AI model provider
 
-The starter uses [Workers AI](https://developers.cloudflare.com/workers-ai/) by default (no API key needed). To use a different provider:
+This project uses OpenRouter (`qwen/qwen3.8-27b:free`) by default. Change the model ID in `server.ts` to use any [OpenRouter model](https://openrouter.ai/models), or switch to a different provider:
 
 ### OpenAI
 
@@ -238,7 +244,8 @@ Your agent is live on Cloudflare's global network. Messages persist in SQLite, s
 - [Agents SDK documentation](https://developers.cloudflare.com/agents/)
 - [Build a chat agent tutorial](https://developers.cloudflare.com/agents/getting-started/build-a-chat-agent/)
 - [Chat agents API reference](https://developers.cloudflare.com/agents/api-reference/chat-agents/)
-- [Workers AI models](https://developers.cloudflare.com/workers-ai/models/)
+- [OpenRouter models](https://openrouter.ai/models)
+- [AI Gateway: OpenRouter](https://developers.cloudflare.com/ai-gateway/usage/providers/openrouter/)
 
 ## License
 

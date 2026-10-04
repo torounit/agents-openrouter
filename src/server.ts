@@ -48,9 +48,11 @@ export class ChatAgent extends AIChatAgent<Env> {
 
   async onChatMessage(_onFinish: unknown, options?: OnChatMessageOptions) {
     const mcpTools = this.mcp.getAITools();
-    const gatewayUrl = await this.env.AI.gateway("openrouter").getUrl(
-      "openrouter"
-    );
+    if (!this.env.CF_AIG_TOKEN) {
+      throw new Error("CF_AIG_TOKEN is not set");
+    }
+    const gatewayUrl =
+      await this.env.AI.gateway("openrouter").getUrl("openrouter");
     const openrouter = createOpenRouter({
       // Empty key falls back to the gateway's BYOK key
       apiKey: this.env.OPENROUTER_API_KEY ?? "",
