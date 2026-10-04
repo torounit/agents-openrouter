@@ -1,5 +1,5 @@
 import { createAiGateway } from "ai-gateway-provider";
-import { createOpenRouter } from "ai-gateway-provider/providers/openrouter";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { callable, routeAgentRequest, type Schedule } from "agents";
 import { getSchedulePrompt, scheduleSchema } from "agents/schedule";
 import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
@@ -52,9 +52,9 @@ export class ChatAgent extends AIChatAgent<Env> {
     const aigateway = createAiGateway({
       binding: this.env.AI.gateway("openrouter")
     });
-    // Without a key, the gateway's BYOK key is used
     const openrouter = createOpenRouter({
-      apiKey: this.env.OPENROUTER_API_KEY || undefined
+      // Empty key falls back to the gateway's BYOK key
+      apiKey: this.env.OPENROUTER_API_KEY ?? ""
     });
 
     const result = streamText({
