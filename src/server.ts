@@ -1,4 +1,5 @@
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { createAiGateway } from "ai-gateway-provider";
+import { createOpenRouter } from "ai-gateway-provider/providers/openrouter";
 import { callable, routeAgentRequest, type Schedule } from "agents";
 import { getSchedulePrompt, scheduleSchema } from "agents/schedule";
 import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
@@ -48,20 +49,16 @@ export class ChatAgent extends AIChatAgent<Env> {
 
   async onChatMessage(_onFinish: unknown, options?: OnChatMessageOptions) {
     const mcpTools = this.mcp.getAITools();
-    if (!this.env.CF_AIG_TOKEN) {
-      throw new Error("CF_AIG_TOKEN is not set");
-    }
-    const gatewayUrl =
-      await this.env.AI.gateway("openrouter").getUrl("openrouter");
+    const aigateway = createAiGateway({
+      binding: this.env.AI.gateway("openrouter")
+    });
+    // Without a key, the gateway's BYOK key is used
     const openrouter = createOpenRouter({
-      // Empty key falls back to the gateway's BYOK key
-      apiKey: this.env.OPENROUTER_API_KEY ?? "",
-      baseURL: `${gatewayUrl.replace(/\/$/, "")}/v1`,
-      headers: { "cf-aig-authorization": `Bearer ${this.env.CF_AIG_TOKEN}` }
+      apiKey: this.env.OPENROUTER_API_KEY || undefined
     });
 
     const result = streamText({
-      model: openrouter("qwen/qwen3.8-27b:free"),
+      model: aigateway(openrouter("qwen/qwen3.8-27b:free")),
       system: `You are a helpful assistant that can understand images. You can check the weather, get the user's timezone, run calculations, and schedule tasks. When users share images, describe what you see and answer questions about them.
 
 ${getSchedulePrompt({ date: new Date() })}
