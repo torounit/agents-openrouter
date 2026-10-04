@@ -18,18 +18,20 @@ npm run dev
 ```
 
 > **Cloudflare authentication is required to run locally.** The AI binding uses
-> `"ai": { "remote": true }` in `wrangler.jsonc` to resolve the AI Gateway URL,
-> so `npm run dev` opens a remote proxy session against Cloudflare and needs you
-> to be authenticated. Either run `wrangler login` once in an interactive
-> terminal, or set a `CLOUDFLARE_API_TOKEN` environment variable.
+> `"ai": { "remote": true }` in `wrangler.jsonc` to reach AI Gateway, so
+> `npm run dev` opens a remote proxy session against Cloudflare and needs you to
+> be authenticated. Either run `wrangler login` once in an interactive terminal,
+> or set a `CLOUDFLARE_API_TOKEN` environment variable.
 
 ### AI Gateway setup
 
-1. Create an AI Gateway named `openrouter` with Authenticated Gateway enabled.
-2. Store your OpenRouter API key in the gateway (BYOK), or set `OPENROUTER_API_KEY`.
-3. Copy `.env.example` to `.env` and set `CF_AIG_TOKEN` to a Cloudflare API token
-   with AI Gateway Run permission. For production, run
-   `npx wrangler secret put CF_AIG_TOKEN`.
+1. Create an AI Gateway named `openrouter`.
+2. Store your OpenRouter API key in the gateway (BYOK), or set `OPENROUTER_API_KEY`
+   in `.env` (`npx wrangler secret put OPENROUTER_API_KEY` for production).
+
+Requests go through the AI binding via
+[`ai-gateway-provider`](https://developers.cloudflare.com/ai-gateway/integrations/vercel-ai-sdk/),
+so no Cloudflare API token is needed even with Authenticated Gateway enabled.
 
 Open [http://localhost:5173](http://localhost:5173) to see your agent in action.
 
