@@ -54,9 +54,9 @@ export class ChatAgent extends AIChatAgent<Env> {
       "openrouter"
     );
     const openrouter = createOpenRouter({
-      // The OpenRouter API key is stored in the gateway (BYOK), so send none
+      // Leave OPENROUTER_API_KEY empty to use the key stored in the gateway (BYOK)
       // https://developers.cloudflare.com/ai-gateway/configuration/bring-your-own-keys/
-      apiKey: "",
+      apiKey: this.env.OPENROUTER_API_KEY ?? "",
       baseURL: `${gatewayUrl.replace(/\/$/, "")}/v1`,
       // Required when the gateway has Authenticated Gateway enabled
       // https://developers.cloudflare.com/ai-gateway/configuration/authentication/
