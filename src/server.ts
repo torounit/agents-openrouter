@@ -1,4 +1,5 @@
-import { createWorkersAI } from "workers-ai-provider";
+import { createAiGateway } from "ai-gateway-provider";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { callable, routeAgentRequest, type Schedule } from "agents";
 import { getSchedulePrompt, scheduleSchema } from "agents/schedule";
 import { AIChatAgent, type OnChatMessageOptions } from "@cloudflare/ai-chat";
@@ -13,7 +14,6 @@ import { z } from "zod";
 
 export class ChatAgent extends AIChatAgent<Env> {
   maxPersistedMessages = 100;
-  chatRecovery = true;
   // Wait for MCP connections to be re-established after hibernation before
   // processing a message, so MCP tools aren't intermittently missing.
   waitForMcpConnections = true;
@@ -48,12 +48,16 @@ export class ChatAgent extends AIChatAgent<Env> {
 
   async onChatMessage(_onFinish: unknown, options?: OnChatMessageOptions) {
     const mcpTools = this.mcp.getAITools();
-    const workersai = createWorkersAI({ binding: this.env.AI });
+    const aigateway = createAiGateway({
+      binding: this.env.AI.gateway("openrouter")
+    });
+    const openrouter = createOpenRouter({
+      // Empty key falls back to the gateway's BYOK key
+      apiKey: this.env.OPENROUTER_API_KEY ?? ""
+    });
 
     const result = streamText({
-      model: workersai("@cf/moonshotai/kimi-k2.7-code", {
-        sessionAffinity: this.sessionAffinity
-      }),
+      model: aigateway(openrouter("qwen/qwen3.8-27b:free")),
       system: `You are a helpful assistant that can understand images. You can check the weather, get the user's timezone, run calculations, and schedule tasks. When users share images, describe what you see and answer questions about them.
 
 ${getSchedulePrompt({ date: new Date() })}
